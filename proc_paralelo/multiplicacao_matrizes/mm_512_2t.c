@@ -1,15 +1,33 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+#include <stdio.h>
 #include <time.h>
 #include <pthread.h>
 
-#ifndef SIZE
-#define SIZE 512
-#endif
+#define size 512
 
-void* dgemm(const int n,
-	  double *A, double *B, double *C)
+double A[size][size];
+double B[size][size];
+double C[size][size];
+int i;
+int j;
+int n;
+int k;
+
+void init() 
+{
+	srand(time(NULL));
+    for(i = 0; i < size; i++) 
+	{
+        for(j = 0; j < size; j++) 
+		{
+            A[i][j] = rand() % 10;
+            B[i][j] = rand() % 10;
+			C[i][j] = 0;
+        }
+    }
+}
+
+void dgemm(int n, double *A, double *B, double *C)
 {
     for (int i = 0; i < n; ++i) {
 		for (int j = 0; j < n; ++j) {
@@ -22,29 +40,28 @@ void* dgemm(const int n,
 	}
 }
 
-int main()
+void print()
 {
-const int N = SIZE;
-	double *A = NULL, *B = NULL, *C = NULL;
-	A = calloc(N*N, sizeof(double));
-	B = calloc(N*N, sizeof(double));
-	C = calloc(N*N, sizeof(double));
-	assert(A!=NULL && B!=NULL && C!=NULL);
-	for (int i=0; i<N*N; ++i) {
-			A[i] = (double)rand()/RAND_MAX;
-			B[i] = (double)rand()/RAND_MAX;
-			
+	for(i = 0; i < size; i++) 
+	{
+		for(j = 0; j < size; j++) 
+		{
+			printf("%g ", C[i][j]);
+		}
+		printf("\n");
 	}
-// Thread ID
-pthread_t tid1;
+}
+
+int main(void)
+{
+init();
+
 clock_t t;
 t = clock();
-pthread_create(&tid1, NULL, dgemm, NULL);
+dgemm(512, *A, *B, *C);
 t = clock() - t;
-    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
- 
-    printf("dgemm took %f seconds to execute \n", time_taken);
-	pthread_join(tid1, NULL);
-    return 0;
-pthread_exit(0);
-}	
+double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+printf("dgemm took %f seconds to execute \n", time_taken);
+
+return 0;
+}

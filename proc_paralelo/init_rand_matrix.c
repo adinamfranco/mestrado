@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define size 512
+#define size 2048
 
 double A[size][size];
 double B[size][size];
@@ -26,7 +26,7 @@ void init()
     }
 }
 
-void dgemm2t(int n, double *A, double *B, double *C)
+void dgemm(int n, double *A, double *B, double *C)
 {
     for (int i = 0; i < n; ++i) {
 		for (int j = 0; j < n; ++j) {
@@ -57,7 +57,7 @@ init();
 
 clock_t t;
 t = clock();
-dgemm2t(512, *A, *B, *C);
+dgemm(2048, *A, *B, *C);
 t = clock() - t;
 double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
 printf("dgemm took %f seconds to execute \n", time_taken);
