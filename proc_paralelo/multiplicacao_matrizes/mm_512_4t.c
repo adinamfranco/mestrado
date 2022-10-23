@@ -1,46 +1,83 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
+#include <stdio.h>
 #include <time.h>
+#include <pthread.h>
 
+#define size 512
+#define N_THREADS 4
+double A[size][size];
+double B[size][size];
+double C[size][size];
+int n;
+pthread_t threads[N_THREADS];
 
-#ifndef SIZE
-#define SIZE 512
-#endif
-
-dgemm(const int n,
-	  double *A, double *B, double *C)
+typedef struct
 {
-    for (int i = 0; i < n; ++i) {
-		for (int j = 0; j < n; ++j) {
-	    	double cij = C[i + j * n];	/* cij = C[i][j] */
-	    	for (int k = 0; k < n; ++k) {
-				cij += A[i + k * n] * B[k + j * n];	/* cij+=A[i][k]*B[k][j] */
-	    	}
-	    	C[i + j * n] = cij;	/* C[i][j] = cij */
+	int i, j;
+} thread_arg, *ptr_thread_arg;
+
+
+void init() 
+{
+	srand(time(NULL));
+    for(int i = 0; i < size; i++) 
+	{
+        for(int j = 0; j < size; j++) 
+		{
+            A[i][j] = rand() % 10;
+            B[i][j] = rand() % 10;
+			C[i][j] = 0;
+        }
+    }
+}
+
+void *calc_ij_matrix(void *arg)
+{
+    ptr_thread_arg arg_thread = (ptr_thread_arg)arg;
+    double cij = *C[arg_thread->i+arg_thread->j*n];
+    for(int k = 0; k < n; k++) 
+	{
+        cij += *A[arg_thread->i+k*n] * *B[k+arg_thread->j*n];
+    }
+    *C[arg_thread->i+arg_thread->j*n] = cij;
+}
+
+void dgemm2t()
+{
+   thread_arg arguments[N_THREADS];
+    for(int i = 0; i < n; ++i) {
+        for(int j = 0; j < n; j+=N_THREADS) {
+            for(int t=0; t<N_THREADS; t++) {
+                arguments[t].i = i;
+                arguments[t].j = j+t;
+                pthread_create(&(threads[t]), NULL, calc_ij_matrix, &(arguments[t]));
+            }
+        }
+    }
+}
+
+void print()
+{
+	for(int i = 0; i < size; i++) 
+	{
+		for(int j = 0; j < size; j++) 
+		{
+			printf("%g ", C[i][j]);
 		}
+		printf("\n");
 	}
 }
 
-int main()
+int main(void)
 {
-const int N = SIZE;
-	double *A = NULL, *B = NULL, *C = NULL;
-	A = calloc(N*N, sizeof(double));
-	B = calloc(N*N, sizeof(double));
-	C = calloc(N*N, sizeof(double));
-	assert(A!=NULL && B!=NULL && C!=NULL);
-	for (int i=0; i<N*N; ++i) {
-			A[i] = (double)rand()/RAND_MAX;
-			B[i] = (double)rand()/RAND_MAX;
-			
-	}
+init();
+
 clock_t t;
 t = clock();
-dgemm(512, A, B, C);
+dgemm2t(512, *A, *B, *C);
 t = clock() - t;
-    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
- 
-    printf("dgemm took %f seconds to execute \n", time_taken);
-    return 0;
-}	
+double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+printf("dgemm took %f seconds to execute \n", time_taken);
+
+return 0;
+}
