@@ -4,8 +4,8 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-#define size 512
-#define N_THREADS 8
+#define size 512  // tamanho da matriz sizexsize
+#define N_THREADS 8 // quantidade de threads
 double A[size * size];
 double B[size * size];
 double C[size * size];
@@ -44,9 +44,12 @@ void *calc_ij_matrix(void *arg)
 void dgemm2t()
 {
    thread_arg arguments[N_THREADS];
-    for(int i = 0; i < size; ++i) {
-        for(int j = 0; j < size; j+=N_THREADS) {
-            for(int t=0; t<N_THREADS; t++) {
+    for(int i = 0; i < size; ++i) 
+    {
+        for(int j = 0; j < size; j+=N_THREADS) 
+        {
+            for(int t=0; t<N_THREADS; t++) 
+            {
                 arguments[t].i = i;
                 arguments[t].j = j+t;
                 pthread_create(&(threads[t]), NULL, calc_ij_matrix, &(arguments[t]));
